@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>远程协助 · 配置 DeepSeek Harness</title>
+<style>
+  :root {
+    --brand: #4f6ef7;
+    --brand-dark: #3a55d8;
+    --bg: #f6f8fc;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --ok: #16a34a;
+    --warn: #d97706;
+    --border: #e5e7eb;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .hero {
+    background: linear-gradient(135deg, #4f6ef7 0%, #7b5cf0 100%);
+    color: #fff;
+    padding: 48px 20px 40px;
+    text-align: center;
+  }
+  .hero h1 { font-size: 28px; margin-bottom: 10px; }
+  .hero p { opacity: .92; font-size: 16px; max-width: 560px; margin: 0 auto; }
+  .container { max-width: 720px; margin: -24px auto 60px; padding: 0 16px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 16px rgba(31,41,55,.06);
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--brand); color: #fff; font-weight: 700; font-size: 15px;
+    margin-right: 10px; vertical-align: middle;
+  }
+  .card h2 { font-size: 20px; margin-bottom: 14px; }
+  .card h3 { font-size: 16px; margin: 14px 0 8px; }
+  .btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px; border-radius: 8px; border: none;
+    font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none;
+    transition: transform .06s ease, box-shadow .15s ease;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-primary:hover { background: var(--brand-dark); box-shadow: 0 4px 12px rgba(79,110,247,.35); }
+  .btn-secondary { background: #eef1ff; color: var(--brand-dark); }
+  .btn-secondary:hover { background: #e2e7ff; }
+  .btn-copy { background: #f3f4f6; color: var(--text); border: 1px solid var(--border); }
+  .btn-copy:hover { background: #e5e7eb; }
+  ol.steps { padding-left: 20px; margin: 10px 0; }
+  ol.steps li { margin-bottom: 8px; }
+  .code-card {
+    background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;
+    padding: 14px 16px; margin: 12px 0; display: flex; align-items: center;
+    justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .code-card .label { font-size: 13px; color: var(--muted); }
+  .code-card .value {
+    font-family: "SFMono-Regular", Consolas, "Courier New", monospace;
+    font-size: 20px; font-weight: 700; letter-spacing: 2px; color: var(--text);
+  }
+  .code-card .value.verification { color: var(--brand-dark); }
+  input[type="text"] {
+    width: 100%; padding: 11px 14px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 16px; font-family: inherit; margin: 6px 0 4px;
+  }
+  input[type="text"]:focus { outline: 2px solid var(--brand); border-color: transparent; }
+  .form-group { margin-bottom: 12px; }
+  .form-group label { font-size: 14px; font-weight: 600; color: var(--muted); }
+  .submit-row { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .notice {
+    background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412;
+    border-radius: 8px; padding: 12px 16px; font-size: 14px; margin-top: 14px;
+  }
+  .ok-banner {
+    background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;
+    border-radius: 8px; padding: 12px 16px; font-size: 14px; margin-top: 14px; display: none;
+  }
+  .footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px; }
+  .tag { display: inline-block; background: #eef1ff; color: var(--brand-dark); border-radius: 999px; padding: 2px 10px; font-size: 12px; margin-left: 6px; }
+  .os-detected { font-size: 14px; color: var(--muted); margin-top: 10px; }
+  .os-detected b { color: var(--text); }
+  details.help { margin-top: 10px; }
+  details.help summary { cursor: pointer; color: var(--brand-dark); font-size: 14px; font-weight: 600; }
+  details.help .body { margin-top: 8px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>远程协助配置服务</h1>
+  <p>工程师将通过安全的远程连接，帮你把 <b>DeepSeek Harness (DSH)</b> 安装配置到你的电脑上。全程约 5~15 分钟，请按下面三步操作。</p>
+</div>
+
+<div class="container">
+
+  <!-- 步骤 1：下载并安装向日葵 -->
+  <div class="card">
+    <h2><span class="step-num">1</span>下载并安装远程协助软件（向日葵）</h2>
+    <p>请点击下方按钮，下载你当前系统的客户端（已自动为你识别系统）。</p>
+    <div class="btn-row">
+      <a class="btn btn-primary" id="dlWin" href="https://sunlogin.oray.com/download" target="_blank" rel="noopener">⬇ 下载 Windows 版</a>
+      <a class="btn btn-primary" id="dlMac" href="https://sunlogin.oray.com/download" target="_blank" rel="noopener" style="display:none">⬇ 下载 macOS 版</a>
+    </div>
+    <div class="os-detected" id="osInfo"></div>
+    <ol class="steps">
+      <li>运行下载好的安装包，按提示完成安装（安装过程中如弹出权限请求，请选择「允许」）。</li>
+      <li>打开向日葵客户端，保持窗口打开即可。</li>
+    </ol>
+    <details class="help">
+      <summary>下载遇到问题？</summary>
+      <div class="body">如果点击下载没反应，可以直接打开官网：<a href="https://sunlogin.oray.com/download" target="_blank" rel="noopener">sunlogin.oray.com/download</a>，选择对应的 Windows / macOS 版本下载。</div>
+    </details>
+  </div>
+
+  <!-- 步骤 2：查看识别码和验证码 -->
+  <div class="card">
+    <h2><span class="step-num">2</span>找到「本机识别码」和「验证码」</h2>
+    <p>打开向日葵客户端后，主界面会显示一串号码。请对照下图找到两串数字：</p>
+    <ol class="steps">
+      <li><b>本机识别码</b>：客户端主界面上方的 9~10 位数字，固定不变。</li>
+      <li><b>验证码</b>：识别码旁边的 6 位数字（可能标为「验证码 / 临时验证码」），每分钟会刷新。</li>
+    </ol>
+    <p class="hint">💡 手机用户（客户本人）也可以直接打电话或微信把这两串数字报给工程师。</p>
+  </div>
+
+  <!-- 步骤 3：填写识别码，发送给工程师 -->
+  <div class="card">
+    <h2><span class="step-num">3</span>把识别码发送给工程师</h2>
+    <p>请把向日葵客户端里的两串数字填到下面，然后点击「复制」并粘贴发送给工程师（微信 / QQ / 电话均可）。</p>
+
+    <div class="form-group">
+      <label for="deviceId">本机识别码</label>
+      <input type="text" id="deviceId" placeholder="例如：123456789" inputmode="numeric" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label for="verifyCode">验证码（6 位，会刷新）</label>
+      <input type="text" id="verifyCode" placeholder="例如：123456" inputmode="numeric" autocomplete="off">
+    </div>
+
+    <div class="submit-row">
+      <button class="btn btn-primary" id="copyBtn">📋 一键复制</button>
+      <!-- 部署后可启用：把下面按钮打开，并在 CONFIG.submitUrl 填入你的后端接口 -->
+      <button class="btn btn-secondary" id="sendBtn" style="display:none">发送给工程师</button>
+    </div>
+    <div class="hint" id="copyHint"></div>
+
+    <div class="code-card" id="resultCard" style="display:none">
+      <div>
+        <div class="label">本机识别码</div>
+        <div class="value" id="resultId">—</div>
+      </div>
+      <div>
+        <div class="label">验证码</div>
+        <div class="value verification" id="resultCode">—</div>
+      </div>
+      <button class="btn btn-copy" id="copyResultBtn">复制</button>
+    </div>
+
+    <div class="ok-banner" id="okBanner">✅ 已复制！请把上面的内容粘贴发送给工程师，然后等待工程师连接你的电脑。</div>
+
+    <div class="notice">
+      ⚠️ <b>安全提醒：</b>识别码和验证码等于你电脑的「临时钥匙」。请只把它发给为你服务的这位工程师，不要发给任何陌生人，验证码使用完毕后会自动失效。连接过程中你可以随时看到工程师的操作。
+    </div>
+  </div>
+
+  <!-- 步骤 4：等待连接与配置 -->
+  <div class="card">
+    <h2><span class="step-num">4</span>等待工程师连接并完成配置</h2>
+    <ol class="steps">
+      <li>工程师连接后，你的屏幕上会出现「被控制」提示，请点击「允许」（第一次连接时需要）。</li>
+      <li>工程师会自动完成 <b>DeepSeek Harness</b> 的安装与配置，全程请勿关闭向日葵窗口、请勿断电。</li>
+      <li>配置完成后，工程师会告知你使用方法，并在你电脑桌面创建启动图标。</li>
+    </ol>
+    <p class="hint">⏱ 预计耗时 5~15 分钟，期间你的电脑可以继续正常使用，但建议不要做重要操作。</p>
+  </div>
+
+  <div class="footer">
+    DeepSeek Harness 远程配置服务 · 工程师联系方式：<span id="contact">（部署时在此填写客服微信/电话）</span>
+  </div>
+</div>
+
+<script>
+// ============ 部署配置（按需修改） ============
+const CONFIG = {
+  // 向日葵官方下载页；如有自己的直链可替换为直链地址
+  downloadUrl: "https://sunlogin.oray.com/download",
+  // 工程师联系方式（显示在页面底部）
+  contact: "（部署时在此填写客服微信/电话）",
+  // 可选：后端接收表单的接口（POST JSON {deviceId, verifyCode}），部署后放开
+  submitUrl: ""
+};
+// ============================================
+
+// ---- 系统识别 ----
+const ua = navigator.userAgent;
+const isMac = /Macintosh|Mac OS X/i.test(ua) && !/Windows/i.test(ua);
+const isWin = /Windows/i.test(ua);
+let osName = "未知系统";
+if (isWin) osName = "Windows";
+else if (isMac) osName = "macOS";
+else if (/Android/i.test(ua)) osName = "Android";
+else if (/iPhone|iPad/i.test(ua)) osName = "iOS";
+
+const osInfo = document.getElementById("osInfo");
+osInfo.innerHTML = "已检测到你的系统：<b>" + osName + "</b>";
+if (isMac) {
+  document.getElementById("dlWin").style.display = "none";
+  document.getElementById("dlMac").style.display = "inline-flex";
+}
+document.querySelectorAll("#dlWin, #dlMac").forEach(a => a.href = CONFIG.downloadUrl);
+document.getElementById("contact").textContent = CONFIG.contact;
+
+// ---- 一键复制 ----
+function buildText() {
+  const id = document.getElementById("deviceId").value.trim();
+  const code = document.getElementById("verifyCode").value.trim();
+  return "本机识别码：" + (id || "____") + "　验证码：" + (code || "____");
+}
+
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  const id = document.getElementById("deviceId").value.trim();
+  const code = document.getElementById("verifyCode").value.trim();
+  if (!id || !code) {
+    document.getElementById("copyHint").textContent = "请先填写识别码和验证码。";
+    return;
+  }
+  const text = buildText();
+  try {
+    await navigator.clipboard.writeText(text);
+    document.getElementById("copyHint").textContent = "";
+    // 展示结果卡片
+    document.getElementById("resultCard").style.display = "flex";
+    document.getElementById("resultId").textContent = id;
+    document.getElementById("resultCode").textContent = code;
+    document.getElementById("okBanner").style.display = "block";
+  } catch (e) {
+    // 剪贴板 API 不可用时的降级：选中提示
+    document.getElementById("copyHint").textContent = "自动复制失败，请手动复制上面的内容：" + text;
+  }
+});
+
+document.getElementById("copyResultBtn").addEventListener("click", async () => {
+  const text = buildText();
+  try {
+    await navigator.clipboard.writeText(text);
+    document.getElementById("okBanner").style.display = "block";
+  } catch (e) {
+    document.getElementById("copyHint").textContent = "复制失败，请手动复制：" + text;
+  }
+});
+
+// ---- 可选：提交到后端 ----
+document.getElementById("sendBtn").addEventListener("click", async () => {
+  const id = document.getElementById("deviceId").value.trim();
+  const code = document.getElementById("verifyCode").value.trim();
+  if (!id || !code) { alert("请先填写识别码和验证码"); return; }
+  if (!CONFIG.submitUrl) { alert("服务暂未开通在线提交，请使用「一键复制」发送给工程师。"); return; }
+  try {
+    await fetch(CONFIG.submitUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deviceId: id, verifyCode: code, os: osName, time: new Date().toISOString() })
+    });
+    document.getElementById("okBanner").style.display = "block";
+  } catch (e) {
+    alert("提交失败，请使用「一键复制」手动发送。");
+  }
+});
+</script>
+</body>
+</html>
